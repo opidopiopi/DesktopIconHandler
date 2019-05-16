@@ -30,6 +30,8 @@ public class IconHandler {
 	private static final int LVM_GETITEMCOUNT = 0x1000 + 4;
 	private static final int LVM_SETITEMPOSITION = 0x1000 + 15;
 	private static final int LVM_GETITEMPOSITION = 0x1000 + 16;
+	private static final int LVM_GETHOTITEM = 0x1000 + 61;
+	
 	private static final int VmOperation = 0x0008;
 	private static final int VmRead = 0x0010;
 	private static final int VmWrite = 0x0020;
@@ -62,6 +64,15 @@ public class IconHandler {
 		if(handler == null) {
 			throw new InstantiationError("Failed to retrieve the SysListView32 handler!");
 		}
+	}
+	
+	/**
+	 * Gets the index of the selected desktop icon.
+	 * 
+	 * @return the index of the selected desktop icon or -1 when none selected
+	 */
+	public int getSelectedIconIndex() {
+		return User32.INSTANCE.SendMessage(handler, LVM_GETHOTITEM, new WPARAM(0), new LPARAM(0)).intValue();
 	}
 	
 	/**
