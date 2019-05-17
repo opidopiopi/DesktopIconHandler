@@ -4,5 +4,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JNA"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JNA_platform"/>
+	<classpathentry kind="lib" path="C:/Users/z003yvut/Desktop/Java/jna-5.3.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/z003yvut/Desktop/Java/jna-platform-5.3.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

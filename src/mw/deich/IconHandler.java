@@ -67,9 +67,9 @@ public class IconHandler {
 	}
 	
 	/**
-	 * Gets the index of the selected desktop icon.
+	 * Gets the index of the hot (the icon the mouse hovers over) desktop icon.
 	 * 
-	 * @return the index of the selected desktop icon or -1 when none selected
+	 * @return the index of the hot desktop icon or -1 when none selected
 	 */
 	public int getSelectedIconIndex() {
 		return User32.INSTANCE.SendMessage(handler, LVM_GETHOTITEM, new WPARAM(0), new LPARAM(0)).intValue();
@@ -98,6 +98,39 @@ public class IconHandler {
 		for (int i = 0; i < icons.length; i++) {
 			User32.INSTANCE.SendMessage(handler, LVM_SETITEMPOSITION, new WPARAM(i), MakeLParam(icons[i].getX(), icons[i].getY()));
 		}
+    }
+	
+	/**
+	 * Sets the positions of the desktop items according to the Icons given as parameters.
+	 * If hotItemOff == true the position of the hot (the icon the mouse hovers over) item will not be updated.
+	 * 
+	 * @param icons		an array of icons which contain the new positions
+	 */
+	public void SetIconPositions(Icon[] icons, boolean hotItemOff)
+    {
+		if(icons.length > getIconNum()) {
+			throw new IndexOutOfBoundsException("Length of icons[] is larger than the number of Icons!");
+		}
+		
+		int hI = -1;
+		if(hotItemOff) hI = getSelectedIconIndex();
+		for (int i = 0; i < icons.length; i++) {
+			if(!(hotItemOff && hI == i)) User32.INSTANCE.SendMessage(handler, LVM_SETITEMPOSITION, new WPARAM(i), MakeLParam(icons[i].getX(), icons[i].getY()));
+		}
+    }
+	
+	/**
+	 * Sets the position of the desktop item according to the icon given as parameter.
+	 * 
+	 * @param icon		the icon which contains the new position
+	 */
+	public void SetIconPosition(Icon icon, int index)
+    {
+		if(index > getIconNum() || index < 0) {
+			throw new IndexOutOfBoundsException("Index out of bounds!");
+		}
+		
+		User32.INSTANCE.SendMessage(handler, LVM_SETITEMPOSITION, new WPARAM(index), MakeLParam(icon.getX(), icon.getY()));
     }
 	
 	/**
