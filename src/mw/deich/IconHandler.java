@@ -1,5 +1,7 @@
 package mw.deich;
 
+import java.util.ArrayList;
+
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -30,6 +32,7 @@ public class IconHandler {
 	private static final int LVM_GETITEMCOUNT = 0x1000 + 4;
 	private static final int LVM_SETITEMPOSITION = 0x1000 + 15;
 	private static final int LVM_GETITEMPOSITION = 0x1000 + 16;
+	private static final int LVM_GETITEMSTATE = 0x1000 + 44;
 	private static final int LVM_GETHOTITEM = 0x1000 + 61;
 	
 	private static final int VmOperation = 0x0008;
@@ -37,6 +40,11 @@ public class IconHandler {
 	private static final int VmWrite = 0x0020;
 	private static final int MEM_RESERVE = 0x2000;
 	private static final int MEM_COMMIT = 0x1000;
+	
+	private static final int LVIS_FOCUSED = 0x0001;
+	private static final int LVIS_SELECTED = 0x0002;
+	private static final int LVIS_DROPHILITED = 0x0008;
+
 	
 	/**
 	 * Instantiates a new IconHandler.
@@ -67,11 +75,96 @@ public class IconHandler {
 	}
 	
 	/**
+	 * Checks whether the icon is focused.
+	 * 
+	 * @param index	the index of the icon to be checked.
+	 * @return	returns whether the icon is focused or not.
+	 */
+	public boolean isIconFocused(int index) {
+		return (User32.INSTANCE.SendMessage(handler, LVM_GETITEMSTATE, new WPARAM(index), new LPARAM(LVIS_FOCUSED)).intValue() & LVIS_FOCUSED) > 0;
+	}
+	
+	/**
+	 * Checks whether the icon is selected.
+	 * 
+	 * @param index	the index of the icon to be checked.
+	 * @return	returns whether the icon is selected or not.
+	 */
+	public boolean isIconSelected(int index) {
+		return (User32.INSTANCE.SendMessage(handler, LVM_GETITEMSTATE, new WPARAM(index), new LPARAM(LVIS_SELECTED)).intValue() & LVIS_SELECTED) > 0;
+	}
+	
+	/**
+	 * Checks whether the icon is highlighted.
+	 * 
+	 * @param index	the index of the icon to be checked.
+	 * @return	returns whether the icon is highlighted or not.
+	 */
+	public boolean isIconDropHilited(int index) {
+		return (User32.INSTANCE.SendMessage(handler, LVM_GETITEMSTATE, new WPARAM(index), new LPARAM(LVIS_DROPHILITED)).intValue() & LVIS_DROPHILITED) > 0;
+	}
+	
+	/**
+	 * Returns the index of the selected icon or -1 if none selected;
+	 * 
+	 * @return	the index of the selected icon.
+	 */
+	public int getFocusedIconIndex() {
+		int i = -1;
+		
+		for(int c = 0; c < getIconNum(); c++) {
+			if(isIconFocused(c)) {
+				i = c;
+				break;
+			}
+		}
+		
+		return i;
+	}
+	
+	/**
+	 * Returns the indices of the selected icons;
+	 * 
+	 * @return	the indices of the selected icons.
+	 */
+	public int[] getSelectedIconsIndices() {
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		
+		for(int c = 0; c < getIconNum(); c++) {
+			if(isIconSelected(c)) {
+				indices.add(c);
+			}
+		}
+		
+		if(indices.size() == 0) indices.add(-1);
+		
+		return indices.stream().mapToInt(i -> i).toArray();
+	}
+	
+	/**
+	 * Returns the index of the for drag&drop highlighted icon or -1 if none selected;
+	 * 
+	 * @return	the index of the for drag&drop highlighted icon.
+	 */
+	public int getDropHilitedIconIndex() {
+		int i = -1;
+		
+		for(int c = 0; c < getIconNum(); c++) {
+			if(isIconDropHilited(c)) {
+				i = c;
+				break;
+			}
+		}
+		
+		return i;
+	}
+	
+	/**
 	 * Gets the index of the hot (the icon the mouse hovers over) desktop icon.
 	 * 
 	 * @return the index of the hot desktop icon or -1 when none selected
 	 */
-	public int getSelectedIconIndex() {
+	public int getHotIconIndex() {
 		return User32.INSTANCE.SendMessage(handler, LVM_GETHOTITEM, new WPARAM(0), new LPARAM(0)).intValue();
 	}
 	
@@ -113,9 +206,27 @@ public class IconHandler {
 		}
 		
 		int hI = -1;
-		if(hotItemOff) hI = getSelectedIconIndex();
+		if(hotItemOff) hI = getHotIconIndex();
 		for (int i = 0; i < icons.length; i++) {
 			if(!(hotItemOff && hI == i)) User32.INSTANCE.SendMessage(handler, LVM_SETITEMPOSITION, new WPARAM(i), MakeLParam(icons[i].getX(), icons[i].getY()));
+		}
+    }
+	
+	/**
+	 * Sets the positions of the desktop items according to the Icons given as parameters.
+	 * Will not update the icon with the given index doNotUpdate.
+	 * 
+	 * @param icons			an array of icons which contain the new positions
+	 * @param doNotUpdate	the index of the icon not to be updated;
+	 */
+	public void SetIconPositions(Icon[] icons, int doNotUpdate)
+    {
+		if(icons.length > getIconNum()) {
+			throw new IndexOutOfBoundsException("Length of icons[] is larger than the number of Icons!");
+		}
+		
+		for (int i = 0; i < icons.length; i++) {
+			if(i != doNotUpdate) User32.INSTANCE.SendMessage(handler, LVM_SETITEMPOSITION, new WPARAM(i), MakeLParam(icons[i].getX(), icons[i].getY()));
 		}
     }
 	
